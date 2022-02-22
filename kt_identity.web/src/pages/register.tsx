@@ -71,7 +71,7 @@ const RegisterPage: AppNextPage = () => {
       />
       <Button>SignIn</Button>
       <Text>
-        Already got an account? <Link href={AppRoutes.login}>Login</Link>
+        Already got an account? <Link href={AppRoutes.HomePage}>Login</Link>
       </Text>
     </Form>
   );

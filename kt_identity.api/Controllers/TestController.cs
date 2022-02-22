@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace kt_identity.api.Controllers
@@ -13,22 +14,46 @@ namespace kt_identity.api.Controllers
             _logger = logger;
         }
 
-        [HttpGet("games")]
+        [Authorize(Policy = "Gamers.Get")]
+        [HttpGet("gamers")]
         public IActionResult GetGames()
         {
-            return Ok();
+            var list = new List<string>
+            {
+                "League of Legends",
+                "It takes two",
+                "Dota"
+            };
+
+            return Ok(list);
         }
 
+        [Authorize(Policy = "Animals.Get")]
         [HttpGet("animals")]
         public IActionResult GetAnimals()
         {
-            return Ok();
+            var list = new List<string>
+            {
+                "Cachorro",
+                "Gato",
+                "Galinha"
+            };
+
+            return Ok(list);
         }
 
+        [Authorize(Policy = "Countries.Get")]
         [HttpGet("countries")]
         public IActionResult GetCountries()
         {
-            return Ok();
+            var list = new List<string>
+            {
+                "Brasil",
+                "Inglaterra",
+                "Portugal"
+            };
+
+            return Ok(list);
         }
     }
 }

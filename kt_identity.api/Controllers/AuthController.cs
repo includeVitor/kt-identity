@@ -31,23 +31,30 @@ namespace kt_identity.api.Controllers
         private static long ToUnixEpochDate(DateTime date)
             => (long)Math.Round((date.ToUniversalTime() - new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalSeconds);
 
-        [HttpGet("Login")]
-        public async Task<IActionResult> Login(string email, string password, bool rememberme)
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login(LoginRequestModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var result = await _signInManager.PasswordSignInAsync(email, password, rememberme, false);
+            var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.RememberMe, false);
 
             if (!result.Succeeded)
             {
+
+                if (result.IsNotAllowed)
+                {
+                    ModelState.AddModelError("Error", "You must confirm your e-mail before login");
+                }
+
                 if (result.IsLockedOut)
                 {
                     ModelState.AddModelError("Error", "You are lock out"); 
                 }
+
                 return BadRequest(ModelState);
             }
 
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByNameAsync(model.Login);
 
             var claims = await _userManager.GetClaimsAsync(user);
 
@@ -64,7 +71,7 @@ namespace kt_identity.api.Controllers
 
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var key = Encoding.ASCII.GetBytes("MEUSEGREDO");
+            var key = Encoding.ASCII.GetBytes("c17885f8541846369cffb05c295bdc2d");
 
             var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
             {
@@ -79,8 +86,10 @@ namespace kt_identity.api.Controllers
         }
 
         [HttpPost("Logout")]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
+            await _signInManager.SignOutAsync();
+
             return Ok();
         }
 
@@ -107,6 +116,8 @@ namespace kt_identity.api.Controllers
                 return BadRequest(ModelState);
             }
 
+            await _userManager.AddClaimAsync(user, new Claim("Animals", "Get"));
+
             var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
             var url = Url.PageLink(protocol: "http", host: "localhost:3000", values: new { userId = user.Id, token = confirmationToken });
@@ -114,16 +125,16 @@ namespace kt_identity.api.Controllers
             return Ok(url);
         }
 
-        [HttpGet("ConfirmEmail")]
-        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        [HttpPost("ConfirmEmail")]
+        public async Task<IActionResult> ConfirmEmail( ConfirmEmailRequestModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(model.UserId);
 
             if(user != null)
             {
-                var result = await _userManager.ConfirmEmailAsync(user, token);
+                var result = await _userManager.ConfirmEmailAsync(user, model.Token);
 
                 if (result.Succeeded)
                 {
@@ -135,27 +146,31 @@ namespace kt_identity.api.Controllers
             
         }
 
+        [HttpPost("GenerateUsers")]
         public async Task<IActionResult> GenerateUsers()
         {
             var user1 = new ApplicationUser
             {
                 Email = "Animal@teste.com",
                 UserName = "Animal",
-                Age = 20
+                Age = 20,
+                EmailConfirmed = true
             };
 
             var user2 = new ApplicationUser
             {
                 Email = "Gamer@teste.com",
                 UserName = "Gamer",
-                Age = 20
+                Age = 20,
+                EmailConfirmed = true
             };
 
             var user3 = new ApplicationUser
             {
                 Email = "Country@teste.com",
                 UserName = "Country",
-                Age = 20
+                Age = 20,
+                EmailConfirmed = true
             };
 
 
@@ -163,24 +178,27 @@ namespace kt_identity.api.Controllers
             {
                 Email = "Admin@teste.com",
                 UserName = "Admin",
-                Age = 20
+                Age = 20,
+                EmailConfirmed = true
             };
 
             await _userManager.CreateAsync(user1, "Padrao@998");
 
-            await _userManager.AddClaimAsync(user1, new Claim("Animal", "Get"));
+            await _userManager.AddClaimAsync(user1, new Claim("Animals", "Get"));
 
             await _userManager.CreateAsync(user2, "Padrao@998");
 
-            await _userManager.AddClaimAsync(user1, new Claim("Gamer", "Get"));
+            await _userManager.AddClaimAsync(user2, new Claim("Gamers", "Get"));
 
             await _userManager.CreateAsync(user3, "Padrao@998");
 
-            await _userManager.AddClaimAsync(user3, new Claim("Country", "Get"));
+            await _userManager.AddClaimAsync(user3, new Claim("Countries", "Get"));
 
             await _userManager.CreateAsync(admin, "Padrao@998");
 
-            await _userManager.AddClaimAsync(admin, new Claim("Admin", "true"));
+            await _userManager.AddClaimAsync(admin, new Claim("Animals", "Get"));
+            await _userManager.AddClaimAsync(admin, new Claim("Gamers", "Get"));
+            await _userManager.AddClaimAsync(admin, new Claim("Countries", "Get"));
 
             return Ok();
         }

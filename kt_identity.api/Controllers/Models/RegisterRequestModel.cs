@@ -5,7 +5,7 @@ namespace kt_identity.api.Controllers.Models
     public class RegisterRequestModel
     {
         [Required]
-        [EmailAddress(ErrorMessage = "The Email field is not a valid e-mail address.")]
+        [EmailAddress(ErrorMessage = "Invalid Email Address")]
         public string Email { get; set; }
 
         [Required]

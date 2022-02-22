@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 namespace kt_identity
@@ -38,7 +39,34 @@ namespace kt_identity
 
             services.AddEndpointsApiExplorer();
 
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(c =>
+            {
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "Insira o token JWT desta maneira: Bearer {seu token}",
+                    Name = "Authorization",
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
+
 
             services.AddControllers();
 
@@ -71,12 +99,19 @@ namespace kt_identity
                 x.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("MEUSEGREDO")),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("c17885f8541846369cffb05c295bdc2d")),
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidAudience = "https://localhost:7001/",
                     ValidIssuer = "kt_identity"
                 };
+            });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Animals.Get", policy => policy.RequireClaim("Animals", "Get"));
+                options.AddPolicy("Gamers.Get", policy => policy.RequireClaim("Gamers", "Get"));
+                options.AddPolicy("Countries.Get", policy => policy.RequireClaim("Countries", "Get"));
             });
 
         }

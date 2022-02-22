@@ -5,10 +5,22 @@ type AppNextPage = {
   Layout?: ({ children }: { children: ReactNode }) => JSX.Element;
 } & NextPage;
 
+type JWTDefault = {
+  exp: number;
+  sub: string;
+};
+
 enum AppRoutes {
-  login = "/",
+  HomePage = "/",
   register = "/register",
+  AppHomePage = "home",
+  AppAnimalsPage = "animals",
+  AppGamersPage = "gamers",
+  AppCountriesPage = "countries",
+  AppForbiddenPage = "forbidden",
 }
 
-export { AppRoutes };
-export type { AppNextPage };
+const COOKIE_NAME = "userToken";
+
+export { AppRoutes, COOKIE_NAME };
+export type { AppNextPage, JWTDefault };

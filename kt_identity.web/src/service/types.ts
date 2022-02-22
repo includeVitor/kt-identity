@@ -5,4 +5,10 @@ type RegisterRequestModel = {
   password: string;
 };
 
-export type { RegisterRequestModel };
+type LoginRequestModel = {
+  login: string;
+  password: string;
+  rememberme: boolean;
+};
+
+export type { RegisterRequestModel, LoginRequestModel };

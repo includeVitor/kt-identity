@@ -10,4 +10,11 @@ const Form = styled.form`
   }
 `;
 
-export { Form };
+const Article = styled.article`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+`;
+
+export { Form, Article };
