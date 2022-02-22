@@ -1,3 +1,6 @@
+using kt_identity.api.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace kt_identity
 {
     public class Startup
@@ -12,9 +15,15 @@ namespace kt_identity
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddDbContext<ApplicationDbContext>(options => {
+                options.UseSqlServer(Configuration.GetConnectionString("Default"));
+            });
+
             services.AddEndpointsApiExplorer();
+
             services.AddSwaggerGen();
+
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
