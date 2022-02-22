@@ -1,7 +1,10 @@
 using kt_identity.api.Data;
 using kt_identity.api.Data.Models;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace kt_identity
 {
@@ -17,6 +20,18 @@ namespace kt_identity
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy("_allowsAny",
+                          builder =>
+                          {
+                              builder
+                                  .AllowAnyOrigin()
+                                  .AllowAnyMethod()
+                                  .AllowAnyHeader();
+                          });
+            });
+
             services.AddDbContext<ApplicationDbContext>(options => {
                 options.UseSqlServer(Configuration.GetConnectionString("Default"));
             });
@@ -26,6 +41,8 @@ namespace kt_identity
             services.AddSwaggerGen();
 
             services.AddControllers();
+
+            services.AddDataProtection();
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
@@ -37,7 +54,31 @@ namespace kt_identity
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(3);
 
                 options.User.RequireUniqueEmail = true;
-            }).AddEntityFrameworkStores<ApplicationDbContext>();
+                options.SignIn.RequireConfirmedEmail = true;
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
+
+
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = true;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("MEUSEGREDO")),
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidAudience = "https://localhost:7001/",
+                    ValidIssuer = "kt_identity"
+                };
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,7 +99,11 @@ namespace kt_identity
 
             app.UseHttpsRedirection();
 
+            app.UseStaticFiles();
+
             app.UseRouting();
+
+            app.UseCors("_allowsAny");
 
             app.UseAuthentication();
 
