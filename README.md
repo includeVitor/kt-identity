@@ -1,2 +1,2 @@
-# KT_Identity
-KT_Identity
+# Knowledge Transfer Identity
+
